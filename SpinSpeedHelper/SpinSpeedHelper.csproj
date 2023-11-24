@@ -8,6 +8,9 @@
       <Reference Include="0Harmony">
         <HintPath>..\srxd-dir\BepInEx\core\0Harmony.dll</HintPath>
       </Reference>
+      <Reference Include="Assembly-CSharp">
+        <HintPath>..\srxd-dir\SpinRhythm_Data\Managed\Assembly-CSharp.dll</HintPath>
+      </Reference>
       <Reference Include="BepInEx">
         <HintPath>..\srxd-dir\BepInEx\core\BepInEx.dll</HintPath>
       </Reference>

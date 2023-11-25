@@ -29,18 +29,6 @@ namespace SpinSpeedHelper
 
         internal class QuickPatches
         {
-            private static int _callCounter = 0;
-            
-            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), nameof(SplineTrackData.DataToGenerate.IsDifferent)),
-             HarmonyPostfix]
-            public static void CheckDifferentData(SplineTrackData.DataToGenerate __instance)
-            {
-                _callCounter++;
-                Log("I have been called " + _callCounter + " times");
-                Log("I have " + __instance.trackSpeeds.Count + " track speeds");
-                Log("I have " + __instance.trackTurns.Count + " track turns");
-            }
-            
             [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), MethodType.Constructor, typeof(PlayableTrackData)), HarmonyPostfix]
             public static void AddTrackSpeedsToSpline(SplineTrackData.DataToGenerate __instance, PlayableTrackData trackData)
             {
@@ -78,6 +66,8 @@ namespace SpinSpeedHelper
                 }
 
                 if (speeds.Count <= 0) return;
+
+                float initialSpeed = __instance.trackSpeeds[0].speed;
                 
                 // __instance.trackSpeeds.Clear();
                 foreach (var trigger in speeds)
@@ -85,7 +75,7 @@ namespace SpinSpeedHelper
                     __instance.trackSpeeds.Add(new TrackSpeedAtTime
                     {
                         time = trigger.Item1,
-                        speed = trigger.Item2,
+                        speed = trigger.Item2 * initialSpeed,
                         interpolateToNextSpeed = trigger.Item3,
                     });
                 }

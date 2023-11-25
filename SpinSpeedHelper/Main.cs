@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -27,24 +29,71 @@ namespace SpinSpeedHelper
 
         internal class QuickPatches
         {
-            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), MethodType.Constructor, typeof(PlayableTrackData)), HarmonyPostfix]
-            public static void DataToGenerate_Constructor_Postfix(SplineTrackData.DataToGenerate __instance)
+            private static int _callCounter = 0;
+            
+            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), nameof(SplineTrackData.DataToGenerate.IsDifferent)),
+             HarmonyPostfix]
+            public static void CheckDifferentData(SplineTrackData.DataToGenerate __instance)
             {
-                if (__instance == null)
+                _callCounter++;
+                Log("I have been called " + _callCounter + " times");
+                Log("I have " + __instance.trackSpeeds.Count + " track speeds");
+                Log("I have " + __instance.trackTurns.Count + " track turns");
+            }
+            
+            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), MethodType.Constructor, typeof(PlayableTrackData)), HarmonyPostfix]
+            public static void AddTrackSpeedsToSpline(SplineTrackData.DataToGenerate __instance, PlayableTrackData trackData)
+            {
+                if (trackData.TrackDataList.Count != 1)
                     return;
-                __instance.trackSpeeds.Clear();
-                for (int i = 0; i < 128; i++)
+                var data = trackData.TrackDataList[0];
+                string customPath = data.CustomFile?.FilePath;
+                if (string.IsNullOrEmpty(customPath))
+                    return;
+                string speedsFilename = Path.GetFileNameWithoutExtension(customPath) + ".speeds";
+                string customsDirectory = Directory.GetParent(customPath)?.FullName;
+                if (string.IsNullOrEmpty(customsDirectory))
+                    return;
+                string speedsPath = Path.Combine(customsDirectory, speedsFilename);
+                var speeds = new List<(float, float, bool)>();
+                if (!File.Exists(speedsPath)) return;
+                foreach (string line in File.ReadAllLines(speedsPath))
                 {
-                    var speed = new TrackSpeedAtTime
+                    var elems = line.Split(' ');
+                    var trigger = (0f, 0f, false);
+                    if (elems.Length < 2) continue;
+                    if (float.TryParse(elems[0], out float time) && float.TryParse(elems[1], out float speed))
                     {
-                        time = i,
-                        speed = ((i % 2) + 1) * 4,
-                        interpolateToNextSpeed = true,
-                    };
-                    __instance.trackSpeeds.Add(speed);
+                        trigger.Item1 = time;
+                        trigger.Item2 = speed;
+                    }
+                    else continue;
+
+                    if (elems.Length >= 3 && bool.TryParse(elems[2], out bool interpolate))
+                    {
+                        trigger.Item3 = interpolate;
+                    }
+
+                    speeds.Add(trigger);
                 }
 
-                Log("Injected " + __instance.trackSpeeds.Count + " track speeds");
+                if (speeds.Count <= 0) return;
+                
+                // __instance.trackSpeeds.Clear();
+                foreach (var trigger in speeds)
+                {
+                    __instance.trackSpeeds.Add(new TrackSpeedAtTime
+                    {
+                        time = trigger.Item1,
+                        speed = trigger.Item2,
+                        interpolateToNextSpeed = trigger.Item3,
+                    });
+                }
+                
+                if (__instance.trackTurns.Count == 1)
+                    __instance.trackTurns.Add(new SplineRenderer.TrackTurnAndContext());
+                
+                Log($"Applied {speeds.Count} triggers from file {speedsFilename}");
             }
         }
     }

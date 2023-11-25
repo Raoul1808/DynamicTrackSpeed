@@ -17,6 +17,9 @@
       <Reference Include="BepInEx.Harmony">
         <HintPath>..\srxd-dir\BepInEx\core\BepInEx.Harmony.dll</HintPath>
       </Reference>
+      <Reference Include="SSD.Game">
+        <HintPath>..\srxd-dir\SpinRhythm_Data\Managed\SSD.Game.dll</HintPath>
+      </Reference>
       <Reference Include="UnityEngine">
         <HintPath>..\srxd-dir\SpinRhythm_Data\Managed\UnityEngine.dll</HintPath>
       </Reference>

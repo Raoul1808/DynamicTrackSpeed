@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -28,8 +27,8 @@ namespace SpinSpeedHelper
 
         internal class QuickPatches
         {
-            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), nameof(SplineTrackData.DataToGenerate.IsDifferent)), HarmonyPostfix]
-            public static void DataToGenerate_IsDifferent_Postfix(SplineTrackData.DataToGenerate __instance)
+            [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), MethodType.Constructor, typeof(PlayableTrackData)), HarmonyPostfix]
+            public static void DataToGenerate_Constructor_Postfix(SplineTrackData.DataToGenerate __instance)
             {
                 if (__instance == null)
                     return;

@@ -1,5 +1,6 @@
-use std::fs;
+use std::{fs, io};
 
+use rfd::FileDialog;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -37,7 +38,19 @@ struct LargeStringValue {
 }
 
 fn main() {
-    let chart_contents = fs::read_to_string("/home/mew/.local/share/Steam/steamapps/compatdata/1058830/pfx/drive_c/users/steamuser/AppData/LocalLow/Super Spin Digital/Spin Rhythm XD/Custom/Jeff.srtb").expect("should be able to read from file");
+    println!("Select a chart to open");
+    let file = FileDialog::new()
+        .add_filter("Spin Rhythm Track Bundle", &["srtb"])
+        .pick_file();
+    let srtb_file = match file {
+        Some(f) => f,
+        None => return,
+    };
+    let chart_contents = fs::read_to_string(&srtb_file).expect("should be able to read from srtb file");
     let chart: RawSrtbFile = serde_json::from_str(&chart_contents).unwrap();
     println!("{:#?}", chart);
+    println!("Press ENTER to exit");
+    io::stdin()
+        .read_line(&mut String::new())
+        .expect("failed to read from stdin");
 }

@@ -12,7 +12,7 @@ macro_rules! str_err {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RawSrtbFile {
-    pub unity_object_values_container: UnityObjectValuesContainer,   
+    pub unity_object_values_container: UnityObjectValuesContainer,
     pub large_string_values_container: LargeStringValuesContainer,
 }
 
@@ -63,32 +63,53 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
         let (line_number, line) = line;
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {
-            continue
+            continue;
         }
-        let line: Vec<_> = line.trim().split_whitespace().collect();
-        if line.len() == 0 {
+        let line: Vec<_> = line.split_whitespace().collect();
+        if line.is_empty() {
             continue;
         }
         if line.len() < 2 || line.len() > 3 {
-            return str_err!(format!("Line {}: expected 2 or 3 values values, found {}", line_number, line.len()));
+            return str_err!(format!(
+                "Line {}: expected 2 or 3 values values, found {}",
+                line_number,
+                line.len()
+            ));
         }
         let time = line[0].parse();
         let time: f32 = match time {
             Ok(t) => t,
-            Err(_) => return str_err!(format!("Line {}: time value is not a valid number", line_number)),
+            Err(_) => {
+                return str_err!(format!(
+                    "Line {}: time value is not a valid number",
+                    line_number
+                ))
+            }
         };
 
         let speed = line[1].parse();
         let speed: f32 = match speed {
             Ok(s) => s,
-            Err(_) => return str_err!(format!("Line {}: speed multiplier is not a valid number", line_number)),
+            Err(_) => {
+                return str_err!(format!(
+                    "Line {}: speed multiplier is not a valid number",
+                    line_number
+                ))
+            }
         };
-        
-        let interpolate = if line.len() != 3 { true } else {
+
+        let interpolate = if line.len() != 3 {
+            true
+        } else {
             let interpolate = line[2].parse();
             match interpolate {
                 Ok(i) => i,
-                Err(_) => return str_err!(format!("Line {}: interpolation is not a valid boolean", line_number)),
+                Err(_) => {
+                    return str_err!(format!(
+                        "Line {}: interpolation is not a valid boolean",
+                        line_number
+                    ))
+                }
             }
         };
 

@@ -1,54 +1,36 @@
 use std::{fs, io};
 
 use rfd::FileDialog;
-use serde::{Deserialize, Serialize};
+use srtb_integrate_speeds::RawSrtbFile;
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RawSrtbFile {
-    pub unity_object_values_container: UnityObjectValuesContainer,   
-    pub large_string_values_container: LargeStringValuesContainer,
+type Result<T, E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
+
+macro_rules! str_err {
+    ($e:expr) => {
+        Err($e.into())
+    };
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct UnityObjectValuesContainer {
-    pub values: Vec<UnityObjectValue>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct UnityObjectValue {
-    pub key: String,
-    pub json_key: String,
-    pub full_type: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct LargeStringValuesContainer {
-    pub values: Vec<LargeStringValue>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct LargeStringValue {
-    pub key: String,
-    pub val: String,
-}
-
-fn main() {
+fn program_flow() -> Result<()> {
     println!("Select a chart to open");
     let file = FileDialog::new()
         .add_filter("Spin Rhythm Track Bundle", &["srtb"])
         .pick_file();
     let srtb_file = match file {
         Some(f) => f,
-        None => return,
+        None => return str_err!("Please select a file"),
     };
-    let chart_contents = fs::read_to_string(&srtb_file).expect("should be able to read from srtb file");
-    let chart: RawSrtbFile = serde_json::from_str(&chart_contents).unwrap();
+    let chart_contents = fs::read_to_string(&srtb_file)?;
+    let chart: RawSrtbFile = serde_json::from_str(&chart_contents)?;
     println!("{:#?}", chart);
+    Ok(())
+}
+
+fn main() {
+    match program_flow() {
+        Ok(()) => println!("Program finished executing without errors."),
+        Err(e) => println!("{e}"),
+    }
     println!("Press ENTER to exit");
     io::stdin()
         .read_line(&mut String::new())

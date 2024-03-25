@@ -49,7 +49,7 @@ pub struct SpeedTriggersData {
     pub triggers: Vec<SpeedTrigger>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "PascalCase")]
 pub struct SpeedTrigger {
     pub time: f32,
@@ -99,7 +99,7 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
         };
 
         let interpolate = if line.len() != 3 {
-            true
+            false
         } else {
             let interpolate = line[2].parse();
             match interpolate {
@@ -123,4 +123,27 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
     }
     let data = SpeedTriggersData { triggers };
     Ok(data)
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{parse_speeds_file, SpeedTrigger};
+
+    #[test]
+    fn get_correct_speeds() {
+        let speeds = r#"
+        0 1
+        1.5  2    false
+        2    1.5  true
+        "#;
+
+        let expected_speeds = vec![
+            SpeedTrigger { time: 0.,  speed_multiplier: 1.,  interpolate_to_next_trigger: false },
+            SpeedTrigger { time: 1.5, speed_multiplier: 2.,  interpolate_to_next_trigger: false },
+            SpeedTrigger { time: 2.,  speed_multiplier: 1.5, interpolate_to_next_trigger: true },
+        ];
+
+        let speeds = parse_speeds_file(speeds.to_string()).unwrap();
+        assert_eq!(speeds.triggers, expected_speeds);
+    }
 }

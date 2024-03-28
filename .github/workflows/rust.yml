@@ -1,0 +1,47 @@
+name: Integration Program - Build Release
+
+on: workflow_dispatch
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test
+        run: |
+          cd srtb-integrate-speeds
+          cargo test --verbose
+
+  build-linux:
+    # Intentionally not latest to keep a low enough GLIBC version number
+    runs-on: ubuntu-20.04
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        cd srtb-integrate-speeds
+        cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: srtb-integrate-speeds/target/release/srtb-integrate-speeds
+
+  build-windows:
+    runs-on: windows-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: |
+        cd srtb-integrate-speeds
+        cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        path: srtb-integrate-speeds/target/release/srtb-integrate-speeds.exe

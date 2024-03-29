@@ -1,13 +1,6 @@
+use std::fmt::Write;
+
 use serde::{Deserialize, Serialize};
-
-pub type Result<T, E = Box<dyn std::error::Error>> = std::result::Result<T, E>;
-
-#[macro_export]
-macro_rules! str_err {
-    ($e:expr) => {
-        Err($e.into())
-    };
-}
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,7 +50,7 @@ pub struct SpeedTrigger {
     pub interpolate_to_next_trigger: bool,
 }
 
-pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
+pub fn speeds_to_json(content: &str) -> Result<SpeedTriggersData, String> {
     let mut triggers = Vec::new();
     for line in content.lines().enumerate() {
         let (line_number, line) = line;
@@ -70,7 +63,7 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
             continue;
         }
         if line.len() < 2 || line.len() > 3 {
-            return str_err!(format!(
+            return Err(format!(
                 "Line {}: expected 2 or 3 values values, found {}",
                 line_number,
                 line.len()
@@ -80,7 +73,7 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
         let time: f32 = match time {
             Ok(t) => t,
             Err(_) => {
-                return str_err!(format!(
+                return Err(format!(
                     "Line {}: time value is not a valid number",
                     line_number
                 ))
@@ -91,7 +84,7 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
         let speed: f32 = match speed {
             Ok(s) => s,
             Err(_) => {
-                return str_err!(format!(
+                return Err(format!(
                     "Line {}: speed multiplier is not a valid number",
                     line_number
                 ))
@@ -105,7 +98,7 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
             match interpolate {
                 Ok(i) => i,
                 Err(_) => {
-                    return str_err!(format!(
+                    return Err(format!(
                         "Line {}: interpolation is not a valid boolean",
                         line_number
                     ))
@@ -125,12 +118,23 @@ pub fn parse_speeds_file(content: String) -> Result<SpeedTriggersData> {
     Ok(data)
 }
 
+pub fn json_to_speeds(speeds: &SpeedTriggersData) -> String {
+    speeds.triggers.iter().fold(String::new(), |mut output, t| {
+        let _ = writeln!(
+            output,
+            "{} {} {}",
+            t.time, t.speed_multiplier, t.interpolate_to_next_trigger
+        );
+        output
+    })
+}
+
 #[cfg(test)]
 mod test {
-    use crate::{parse_speeds_file, SpeedTrigger};
+    use crate::{json_to_speeds, speeds_to_json, SpeedTrigger, SpeedTriggersData};
 
     #[test]
-    fn get_correct_speeds() {
+    fn test_speeds_to_json() {
         let speeds = r#"
         0 1
         1.5  2    false
@@ -138,12 +142,51 @@ mod test {
         "#;
 
         let expected_speeds = vec![
-            SpeedTrigger { time: 0.,  speed_multiplier: 1.,  interpolate_to_next_trigger: false },
-            SpeedTrigger { time: 1.5, speed_multiplier: 2.,  interpolate_to_next_trigger: false },
-            SpeedTrigger { time: 2.,  speed_multiplier: 1.5, interpolate_to_next_trigger: true },
+            SpeedTrigger {
+                time: 0.,
+                speed_multiplier: 1.,
+                interpolate_to_next_trigger: false,
+            },
+            SpeedTrigger {
+                time: 1.5,
+                speed_multiplier: 2.,
+                interpolate_to_next_trigger: false,
+            },
+            SpeedTrigger {
+                time: 2.,
+                speed_multiplier: 1.5,
+                interpolate_to_next_trigger: true,
+            },
         ];
 
-        let speeds = parse_speeds_file(speeds.to_string()).unwrap();
+        let speeds = speeds_to_json(speeds).unwrap();
         assert_eq!(speeds.triggers, expected_speeds);
+    }
+
+    #[test]
+    fn struct_to_speeds() {
+        let triggers = vec![
+            SpeedTrigger {
+                time: 0.,
+                speed_multiplier: 1.,
+                interpolate_to_next_trigger: false,
+            },
+            SpeedTrigger {
+                time: 1.5,
+                speed_multiplier: 2.,
+                interpolate_to_next_trigger: false,
+            },
+            SpeedTrigger {
+                time: 2.,
+                speed_multiplier: 1.5,
+                interpolate_to_next_trigger: true,
+            },
+        ];
+        let speeds = SpeedTriggersData { triggers };
+
+        let expected_speeds = "0 1 false\n1.5 2 false\n2 1.5 true\n";
+
+        let speeds = json_to_speeds(&speeds);
+        assert_eq!(speeds, expected_speeds);
     }
 }

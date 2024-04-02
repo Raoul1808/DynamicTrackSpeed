@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using BepInEx;
@@ -15,11 +16,13 @@ namespace DynamicTrackSpeed
         public const string Version = "1.2.0";
 
         private static ManualLogSource _logger;
+        private static CultureInfo _culture;
 
         private void Awake()
         {
             _logger = Logger;
             Logger.LogMessage("Hello from Dynamic Track Speed!");
+            _culture = new CultureInfo("en-US");
             Harmony harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(QuickPatches));
             Logger.LogMessage("Patched methods: " + harmony.GetPatchedMethods().Count());
@@ -67,7 +70,7 @@ namespace DynamicTrackSpeed
                     var elems = line.Split(' '); 
                     var trigger = new SpeedTrigger();
                     if (elems.Length < 2) continue;
-                    if (float.TryParse(elems[0], out float time) && float.TryParse(elems[1], out float speed))
+                    if (float.TryParse(elems[0], NumberStyles.Float, _culture, out float time) && float.TryParse(elems[1], NumberStyles.Float, _culture, out float speed))
                     {
                         trigger.Time = time;
                         trigger.SpeedMultiplier = speed;

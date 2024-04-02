@@ -33,6 +33,8 @@ Speed triggers in the `speeds` format use this format:
 
 Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.
 
+> Extra note: If you are adding speeds to a chart that already has speed triggers integrated, the speed triggers in the speeds file will be loaded first.
+
 ## Integration tool
 
 Due to SpinShare uploading limitations, you can integrate the speed triggers directly in your SRTB by using a convenient little tool you can find with the mod download.

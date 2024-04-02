@@ -62,6 +62,8 @@ namespace DynamicTrackSpeed
                 var speeds = new List<SpeedTrigger>();
                 foreach (string line in File.ReadAllLines(speedsPath))
                 {
+                    if (line.StartsWith("#"))
+                        continue;
                     var elems = line.Split(' '); 
                     var trigger = new SpeedTrigger();
                     if (elems.Length < 2) continue;

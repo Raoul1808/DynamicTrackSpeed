@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>net472</TargetFramework>
+        <AssemblyName>DynamicTrackSpeed</AssemblyName>
+        <RootNamespace>DynamicTrackSpeed</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,9 +19,6 @@
       <Reference Include="BepInEx.Harmony">
         <HintPath>..\srxd-dir\BepInEx\core\BepInEx.Harmony.dll</HintPath>
       </Reference>
-      <Reference Include="ChartHelper">
-        <HintPath>..\srxd-dir\BepInEx\plugins\ChartHelper.dll</HintPath>
-      </Reference>
       <Reference Include="SSD.Game">
         <HintPath>..\srxd-dir\SpinRhythm_Data\Managed\SSD.Game.dll</HintPath>
       </Reference>
@@ -29,6 +28,10 @@
       <Reference Include="UnityEngine.CoreModule">
         <HintPath>..\srxd-dir\SpinRhythm_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
     
     <Target Name="PostBuildScript" AfterTargets="AfterBuild">

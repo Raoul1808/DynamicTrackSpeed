@@ -3,25 +3,23 @@ using System.IO;
 using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
-using ChartHelper;
 using HarmonyLib;
 
-namespace SpinSpeedHelper
+namespace DynamicTrackSpeed
 {
     [BepInPlugin(Guid, Name, Version)]
-    [BepInDependency("srxd.raoul1808.charthelper")]
     public class Main : BaseUnityPlugin
     {
-        public const string Guid = "srxd.raoul1808.spinspeedhelper";
-        public const string Name = "Spin Speed Helper";
-        public const string Version = "1.1.0";
+        public const string Guid = "srxd.raoul1808.dynamictrackspeed";
+        public const string Name = "Dynamic Track Speed";
+        public const string Version = "1.2.0";
 
         private static ManualLogSource _logger;
 
         private void Awake()
         {
             _logger = Logger;
-            Logger.LogMessage("Hi from Spin Speed Helper!");
+            Logger.LogMessage("Hello from Dynamic Track Speed!");
             Harmony harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(QuickPatches));
             Logger.LogMessage("Patched methods: " + harmony.GetPatchedMethods().Count());
@@ -99,9 +97,17 @@ namespace SpinSpeedHelper
                 if (string.IsNullOrEmpty(customsDirectory))
                     return;
                 string speedsPath = Path.Combine(customsDirectory, speedsFilename);
-                var triggers = File.Exists(speedsPath)
-                    ? TriggersFromSpeedsFile(speedsPath)
-                    : TriggersFromSrtb(trackData);
+                bool loadedFromSpeeds = true;
+                List<SpeedTrigger> triggers;
+                if (File.Exists(speedsPath))
+                {
+                    triggers = TriggersFromSpeedsFile(speedsPath);
+                }
+                else
+                {
+                    triggers = TriggersFromSrtb(trackData);
+                    loadedFromSpeeds = false;
+                }
 
                 if (triggers == null || triggers.Count <= 0) return;
 
@@ -117,11 +123,14 @@ namespace SpinSpeedHelper
                         interpolateToNextSpeed = trigger.InterpolateToNextTrigger,
                     });
                 }
-                
+
                 if (__instance.trackTurns.Count == 1)
                     __instance.trackTurns.Add(new SplineRenderer.TrackTurnAndContext());
-                
-                Log($"Applied {triggers.Count} triggers from file {speedsFilename}");
+
+                string msg = loadedFromSpeeds
+                    ? $"Applied {triggers.Count} triggers from file {speedsFilename}"
+                    : $"Applied {triggers.Count} triggers from embedded data";
+                Log(msg);
             }
         }
     }

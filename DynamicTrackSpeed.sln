@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpinSpeedHelper", "SpinSpeedHelper\SpinSpeedHelper.csproj", "{31FA377C-58C8-48E3-86E7-653262E1C24E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicTrackSpeed", "DynamicTrackSpeed\DynamicTrackSpeed.csproj", "{31FA377C-58C8-48E3-86E7-653262E1C24E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

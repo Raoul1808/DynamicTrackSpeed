@@ -136,7 +136,8 @@ fn map_num_to_key<'a>(opt: i32) -> Option<&'a str> {
         3 => Some("SpeedHelper_SpeedTriggers_HARD"),
         4 => Some("SpeedHelper_SpeedTriggers_EXPERT"),
         5 => Some("SpeedHelper_SpeedTriggers_XD"),
-        6 => Some("SpeedHelper_SpeedTriggers"),
+        6 => Some("SpeedHelper_SpeedTriggers_REMIXD"),
+        7 => Some("SpeedHelper_SpeedTriggers"),
         _ => None,
     }
 }
@@ -161,7 +162,8 @@ pub fn program_flow() -> Result<(), String> {
     println!("3. Hard");
     println!("4. Expert");
     println!("5. XD");
-    println!("6. All (legacy)");
+    println!("6. RemiXD");
+    println!("7. All (legacy)");
     print!("> ");
     let mut buf = String::new();
     std::io::stdout().flush().expect("failed to flush stdout");

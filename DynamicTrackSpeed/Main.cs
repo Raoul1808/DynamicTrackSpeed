@@ -38,7 +38,8 @@ namespace DynamicTrackSpeed
                 TrackData.DifficultyType.Normal,
                 TrackData.DifficultyType.Hard,
                 TrackData.DifficultyType.Expert,
-                TrackData.DifficultyType.XD
+                TrackData.DifficultyType.XD,
+                TrackData.DifficultyType.RemiXD,
             };
 
             struct SpeedTrigger

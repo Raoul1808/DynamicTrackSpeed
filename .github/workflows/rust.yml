@@ -32,10 +32,19 @@ jobs:
       run: |
         cd srtb-integrate-speeds
         cargo build --release
-    - name: Upload artifact
+        cp srtb-integrate-speeds/target/release/srtb-integrate-speeds.exe ./integration-tool-linux
+        cargo build --release --features gui
+        cp srtb-integrate-speeds/target/release/srtb-integrate-speeds.exe ./integration-tool-linux-gui
+    - name: Upload CLI artifact
       uses: actions/upload-artifact@v3
       with:
-        path: srtb-integrate-speeds/target/release/srtb-integrate-speeds
+        name: integration-tool-linux
+        path: integration-tool-linux
+    - name: Upload GUI artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-tool-linux-gui
+        path: integration-tool-linux-gui
 
   build-windows:
     runs-on: windows-latest
@@ -47,7 +56,16 @@ jobs:
       run: |
         cd srtb-integrate-speeds
         cargo build --release
-    - name: Upload artifact
+        cp srtb-integrate-speeds\target\release\srtb-integrate-speeds.exe .\integration-tool.exe
+        cargo build --release --features gui
+        cp srtb-integrate-speeds\target\release\srtb-integrate-speeds.exe .\integration-tool-gui.exe
+    - name: Upload CLI artifact
       uses: actions/upload-artifact@v3
       with:
-        path: srtb-integrate-speeds/target/release/srtb-integrate-speeds.exe
+        name: integration-tool.exe
+        path: integration-tool.exe
+    - name: Upload GUI artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-tool-gui.exe
+        path: integration-tool-gui.exe

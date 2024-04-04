@@ -12,6 +12,14 @@ To get started adding speed triggers, open your customs directory and create a n
 
 For example if you want to add triggers to `NULCTRL.srtb`, create a new file called `NULCTRL.speeds` **right next to `NULCTRL.srtb`**. They must be in the same directory.
 
+> [!TIP]
+> 
+> If you are charting multiple difficulties, you can make a speeds file specific to one difficulty by appending its name in all caps to the filename.
+> 
+> Example: If you are charting NULCTRL in easy and expert and want to isolate the speed triggers, create 2 `NULCTRL_EASY.speeds` and `NULCTRL_EXPERT.speeds` files.
+> 
+> If you have other difficulties that don't have their own separate speeds file, they will use the global speeds file with no difficulty append.
+
 Next, open the `.speeds` file. You might want to use the editor for this section.
 
 Speed triggers in the `speeds` format use this format:
@@ -33,13 +41,25 @@ Speed triggers in the `speeds` format use this format:
 
 Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.
 
-> Extra note: If you are adding speeds to a chart that already has speed triggers integrated, the speed triggers in the speeds file will be loaded first.
+> [!IMPORTANT]
+> 
+> A little note on loading priority:
+> 
+> The mod will look for the following data and load whichever one it finds first
+> 1. A dedicated speeds file for a specific difficulty
+> 2. A dedicated speeds file for the whole chart
+> 3. Dedicated integrated speeds for a specific difficulty
+> 4. Legacy dedicated integrated speeds for the whole chart
+> 
+> If the mod finds none of these, no speed triggers will be loaded.
 
 ## Integration tool
 
 Due to SpinShare uploading limitations, you can integrate the speed triggers directly in your SRTB by using a convenient little tool you can find with the mod download.
 
 The tool is rather self-explanatory. You can integrate your speeds file in your chart or extract an existing chart's speeds file in case you want to analyze the speed triggers.
+
+The tool comes in 2 flavours: a console version and a fresh new GUI version. If you encounter some issues with the GUI version, you can use the console version instead. Both tools work the same.
 
 ## Building the mod
 
@@ -65,6 +85,7 @@ Steps:
 1. Clone this repo
 2. cd into `srtb-integrate-speeds`
 3. Run `cargo build` or `cargo run` from a command line
+   - If you want to use the gui version, add the flag `--features gui`
 4. Profit
 
 ## License

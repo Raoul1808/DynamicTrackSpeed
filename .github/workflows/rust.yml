@@ -32,9 +32,9 @@ jobs:
       run: |
         cd srtb-integrate-speeds
         cargo build --release
-        cp srtb-integrate-speeds/target/release/srtb-integrate-speeds ./integration-tool-linux
+        cp target/release/srtb-integrate-speeds ../integration-tool-linux
         cargo build --release --features gui
-        cp srtb-integrate-speeds/target/release/srtb-integrate-speeds ./integration-tool-linux-gui
+        cp target/release/srtb-integrate-speeds ../integration-tool-linux-gui
     - name: Upload CLI artifact
       uses: actions/upload-artifact@v3
       with:
@@ -56,9 +56,9 @@ jobs:
       run: |
         cd srtb-integrate-speeds
         cargo build --release
-        cp srtb-integrate-speeds\target\release\srtb-integrate-speeds.exe .\integration-tool.exe
+        cp target\release\srtb-integrate-speeds.exe ..\integration-tool.exe
         cargo build --release --features gui
-        cp srtb-integrate-speeds\target\release\srtb-integrate-speeds.exe .\integration-tool-gui.exe
+        cp target\release\srtb-integrate-speeds.exe ..\integration-tool-gui.exe
     - name: Upload CLI artifact
       uses: actions/upload-artifact@v3
       with:

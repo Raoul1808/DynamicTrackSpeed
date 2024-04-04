@@ -1,7 +1,17 @@
+#[cfg(not(feature = "gui"))]
 mod cli;
 
+#[cfg(feature = "gui")]
+mod gui;
+
 fn main() {
+    #[cfg(not(feature = "gui"))]
     match cli::program_flow() {
+        Ok(()) => println!("Program finished executing without errors."),
+        Err(e) => println!("{e}"),
+    }
+    #[cfg(feature = "gui")]
+    match gui::program_flow() {
         Ok(()) => println!("Program finished executing without errors."),
         Err(e) => println!("{e}"),
     }

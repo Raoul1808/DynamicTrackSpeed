@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{fmt::Write, fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 
@@ -127,6 +127,107 @@ pub fn json_to_speeds(speeds: &SpeedTriggersData) -> String {
         );
         output
     })
+}
+
+pub fn integrate(srtb: &Path, speeds: &Path, diff_key: &str) -> Result<(), String> {
+    println!("Reading file contents");
+    let chart_contents = fs::read_to_string(srtb).map_err(|e| e.to_string())?;
+    let speeds_contents = fs::read_to_string(speeds).map_err(|e| e.to_string())?;
+
+    println!("Converting speeds");
+    let speeds = speeds_to_json(&speeds_contents)?;
+    let speeds_json = serde_json::to_string(&speeds).map_err(|e| e.to_string())?;
+
+    println!("Integrating to srtb");
+    let mut chart: RawSrtbFile =
+        serde_json::from_str(&chart_contents).map_err(|e| e.to_string())?;
+    if let Some(value) = chart
+        .large_string_values_container
+        .values
+        .iter_mut()
+        .find(|v| v.key == diff_key)
+    {
+        value.val.clone_from(&speeds_json);
+    } else {
+        chart
+            .large_string_values_container
+            .values
+            .push(LargeStringValue {
+                key: diff_key.to_string(),
+                val: speeds_json.clone(),
+            });
+    }
+    let chart = serde_json::to_string(&chart).map_err(|e| e.to_string())?;
+
+    println!("Integration complete! Please select where you would like to save your file");
+    let file = rfd::FileDialog::new()
+        .add_filter("Spin Rhythm Track Bundle", &["srtb"])
+        .save_file();
+    let dest_file = file.ok_or("no destination file selected")?;
+    fs::write(dest_file, chart).map_err(|e| e.to_string())?;
+    println!("All done!");
+    Ok(())
+}
+
+pub fn extract(file: &Path, diff_key: &str) -> Result<(), String> {
+    println!("Checking for speeds data");
+    let srtb_contents = fs::read_to_string(file).map_err(|e| e.to_string())?;
+    let chart: RawSrtbFile = serde_json::from_str(&srtb_contents).map_err(|e| e.to_string())?;
+
+    if let Some(value) = chart
+        .large_string_values_container
+        .values
+        .iter()
+        .find(|v| v.key == diff_key)
+    {
+        println!("Found speeds data. Converting");
+        let speeds: SpeedTriggersData =
+            serde_json::from_str(&value.val).map_err(|e| e.to_string())?;
+        let speeds = json_to_speeds(&speeds);
+
+        println!(
+            "Conversion done! Please select where you would like to save the resulting speeds file"
+        );
+        let file = rfd::FileDialog::new()
+            .add_filter("Speed Triggers file", &["speeds"])
+            .save_file();
+        let file = file.ok_or("no destination file selected")?;
+        let file = file.with_extension("speeds");
+        fs::write(file, speeds).map_err(|e| e.to_string())?;
+        println!("All done!");
+    } else {
+        println!("No speeds data found.");
+    }
+    Ok(())
+}
+
+pub fn remove(file: &Path, diff_key: &str) -> Result<(), String> {
+    println!("Checking for speeds data");
+    let srtb_contents = fs::read_to_string(file).map_err(|e| e.to_string())?;
+    let mut chart: RawSrtbFile = serde_json::from_str(&srtb_contents).map_err(|e| e.to_string())?;
+
+    if let Some((index, _)) = chart
+        .large_string_values_container
+        .values
+        .iter()
+        .enumerate()
+        .find(|(_, v)| v.key == diff_key)
+    {
+        println!("Found speeds data. Removing");
+        chart.large_string_values_container.values.remove(index);
+        let chart_contents = serde_json::to_string(&chart).map_err(|e| e.to_string())?;
+        println!("Removed! Please select a saving location");
+        let file = rfd::FileDialog::new()
+            .add_filter("Spin Rhythm Track Bundle", &["srtb"])
+            .save_file();
+        let file = file.ok_or("no destination file selected")?;
+        let file = file.with_extension("srtb");
+        fs::write(file, chart_contents).map_err(|e| e.to_string())?;
+        println!("All done!");
+    } else {
+        println!("No speeds data found.");
+    }
+    Ok(())
 }
 
 #[cfg(test)]

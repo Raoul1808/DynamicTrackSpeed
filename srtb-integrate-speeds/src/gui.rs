@@ -6,6 +6,7 @@ use iced::{
     Alignment, Length, Sandbox, Settings, Size,
 };
 use rfd::FileDialog;
+use srtb_integrate_speeds::{extract, integrate, remove};
 
 pub fn program_flow() -> iced::Result {
     let mut settings = Settings::default();
@@ -28,7 +29,7 @@ pub enum Action {
     Remove,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Difficulty {
     Easy,
     Normal,
@@ -49,6 +50,18 @@ impl Difficulty {
         Difficulty::RemiXD,
         Difficulty::Legacy,
     ];
+
+    fn to_key<'a>(self) -> &'a str {
+        match self {
+            Self::Easy => "SpeedHelper_SpeedTriggers_EASY",
+            Self::Normal => "SpeedHelper_SpeedTriggers_NORMAL",
+            Self::Hard => "SpeedHelper_SpeedTriggers_HARD",
+            Self::Expert => "SpeedHelper_SpeedTriggers_EXPERT",
+            Self::XD => "SpeedHelper_SpeedTriggers_XD",
+            Self::RemiXD => "SpeedHelper_SpeedTriggers_REMIXD",
+            Self::Legacy => "SpeedHelper_SpeedTriggers",
+        }
+    }
 }
 
 impl fmt::Display for Difficulty {
@@ -72,6 +85,22 @@ pub enum Message {
     SelectDifficulty(Difficulty),
     SelectSpeeds,
     ProcessAndSave,
+}
+
+fn ok_dialog(text: &str) {
+    rfd::MessageDialog::new()
+        .set_level(rfd::MessageLevel::Info)
+        .set_title("SRTB Integration Tool")
+        .set_description(text)
+        .show();
+}
+
+fn err_dialog(text: &str) {
+    rfd::MessageDialog::new()
+        .set_level(rfd::MessageLevel::Error)
+        .set_title("SRTB Integration Tool")
+        .set_description(text)
+        .show();
 }
 
 impl Sandbox for App {
@@ -99,6 +128,9 @@ impl Sandbox for App {
                     .add_filter("Spin Rhythm Track Bundle", &["srtb"])
                     .pick_file();
                 println!("Selected: {:?}", self.selected_chart);
+                self.selected_action = None;
+                self.selected_difficulty = None;
+                self.selected_speeds = None;
             }
             Message::SelectAction(action) => {
                 self.selected_action = Some(action);
@@ -112,7 +144,26 @@ impl Sandbox for App {
                     .pick_file();
             }
             Message::ProcessAndSave => {
-                unimplemented!()
+                let action = self.selected_action.unwrap();
+                let srtb = self.selected_chart.clone().unwrap();
+                let diff = self.selected_difficulty.unwrap();
+                match action {
+                    Action::Integrate => {
+                        let speeds = self.selected_speeds.clone().unwrap();
+                        match integrate(&srtb, &speeds, diff.to_key()) {
+                            Ok(()) => ok_dialog("Integration complete!"),
+                            Err(e) => err_dialog(&format!("An error occurred: {e}")),
+                        }
+                    }
+                    Action::Extract => match extract(&srtb, diff.to_key()) {
+                        Ok(()) => ok_dialog("Extraction complete!"),
+                        Err(e) => err_dialog(&format!("An error occurred: {e}")),
+                    },
+                    Action::Remove => match remove(&srtb, diff.to_key()) {
+                        Ok(()) => ok_dialog("Removal complete!"),
+                        Err(e) => err_dialog(&format!("An error occurred: {e}")),
+                    },
+                }
             }
         }
     }

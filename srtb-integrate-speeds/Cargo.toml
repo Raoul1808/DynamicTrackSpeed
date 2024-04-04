@@ -10,7 +10,6 @@ strip = true
 lto = true
 
 [features]
-default = ["gui"]
 gui = ["dep:iced"]
 
 [dependencies]

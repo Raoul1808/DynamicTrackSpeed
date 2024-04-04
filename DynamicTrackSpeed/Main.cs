@@ -13,7 +13,7 @@ namespace DynamicTrackSpeed
     {
         public const string Guid = "srxd.raoul1808.dynamictrackspeed";
         public const string Name = "Dynamic Track Speed";
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
 
         private static ManualLogSource _logger;
         private static CultureInfo _culture;
@@ -32,11 +32,14 @@ namespace DynamicTrackSpeed
 
         internal class QuickPatches
         {
-            struct CustomData
+            private static TrackData.DifficultyType[] _validDiffs =
             {
-                public string Name { get; set; }
-                public int Wysi { get; set; }
-            }
+                TrackData.DifficultyType.Easy,
+                TrackData.DifficultyType.Normal,
+                TrackData.DifficultyType.Hard,
+                TrackData.DifficultyType.Expert,
+                TrackData.DifficultyType.XD
+            };
 
             struct SpeedTrigger
             {
@@ -50,12 +53,14 @@ namespace DynamicTrackSpeed
                 public List<SpeedTrigger> Triggers { get; set; }
             }
 
-            private static List<SpeedTrigger> TriggersFromSrtb(PlayableTrackData trackData)
+            private static List<SpeedTrigger> TriggersFromSrtb(PlayableTrackData trackData, string diff)
             {
                 var files = new List<IMultiAssetSaveFile>();
                 trackData.GetCustomFiles(files);
                 var file = files.First();
                 if (file is null) return null;
+                if (CustomChartHelper.TryGetCustomData(file, "SpeedHelper_SpeedTriggers_" + diff, out SpeedTriggersMetadata diffData))
+                    return diffData.Triggers;
                 return CustomChartHelper.TryGetCustomData(file, "SpeedHelper_SpeedTriggers",
                     out SpeedTriggersMetadata data) ? data.Triggers : null;
             }
@@ -97,20 +102,30 @@ namespace DynamicTrackSpeed
                 string customPath = data.CustomFile?.FilePath;
                 if (string.IsNullOrEmpty(customPath))
                     return;
+                if (!_validDiffs.Contains(trackData.Difficulty))
+                    return;
+                string diffStr = trackData.Difficulty.ToString().ToUpper();
                 string speedsFilename = Path.GetFileNameWithoutExtension(customPath) + ".speeds";
+                string diffSpeedsFilename = Path.GetFileNameWithoutExtension(customPath) + "_" + diffStr + ".speeds";
                 string customsDirectory = Directory.GetParent(customPath)?.FullName;
                 if (string.IsNullOrEmpty(customsDirectory))
                     return;
                 string speedsPath = Path.Combine(customsDirectory, speedsFilename);
+                string diffSpeedsPath = Path.Combine(customsDirectory, diffSpeedsFilename);
                 bool loadedFromSpeeds = true;
                 List<SpeedTrigger> triggers;
-                if (File.Exists(speedsPath))
-                {
+                
+                // Loading order: diff-speeds > speeds > diff-srtb > srtb
+                // diff-speeds
+                if (File.Exists(diffSpeedsPath))
+                    triggers = TriggersFromSpeedsFile(diffSpeedsPath);
+                // global speeds
+                else if (File.Exists(speedsPath))
                     triggers = TriggersFromSpeedsFile(speedsPath);
-                }
+                // diff-srtb and srtb
                 else
                 {
-                    triggers = TriggersFromSrtb(trackData);
+                    triggers = TriggersFromSrtb(trackData, diffStr);
                     loadedFromSpeeds = false;
                 }
 

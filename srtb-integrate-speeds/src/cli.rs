@@ -123,8 +123,7 @@ fn remove_speeds(key: &str) -> Result<(), String> {
         let file = file.with_extension("srtb");
         fs::write(file, chart_contents).map_err(|e| e.to_string())?;
         println!("All done!");
-    }
-    else {
+    } else {
         println!("No speeds data found.");
     }
     Ok(())
@@ -138,7 +137,7 @@ fn map_num_to_key<'a>(opt: i32) -> Option<&'a str> {
         4 => Some("SpeedHelper_SpeedTriggers_EXPERT"),
         5 => Some("SpeedHelper_SpeedTriggers_XD"),
         6 => Some("SpeedHelper_SpeedTriggers"),
-        _ => None
+        _ => None,
     }
 }
 

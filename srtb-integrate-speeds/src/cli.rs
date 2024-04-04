@@ -3,7 +3,7 @@ use std::{fs, io::Write};
 use rfd::FileDialog;
 use srtb_integrate_speeds::*;
 
-fn integrate_speeds() -> Result<(), String> {
+fn integrate_speeds(key: &str) -> Result<(), String> {
     println!("Select a chart to integrate speeds to");
     let file = FileDialog::new()
         .add_filter("Spin Rhythm Track Bunidle", &["srtb"])
@@ -32,7 +32,7 @@ fn integrate_speeds() -> Result<(), String> {
         .large_string_values_container
         .values
         .iter_mut()
-        .find(|v| v.key == "SpeedHelper_SpeedTriggers")
+        .find(|v| v.key == key)
     {
         value.val.clone_from(&speeds_json);
     } else {
@@ -40,7 +40,7 @@ fn integrate_speeds() -> Result<(), String> {
             .large_string_values_container
             .values
             .push(LargeStringValue {
-                key: "SpeedHelper_SpeedTriggers".to_string(),
+                key: key.to_string(),
                 val: speeds_json.clone(),
             });
     }
@@ -56,7 +56,7 @@ fn integrate_speeds() -> Result<(), String> {
     Ok(())
 }
 
-fn extract_speeds() -> Result<(), String> {
+fn extract_speeds(key: &str) -> Result<(), String> {
     println!("Select a chart to extract speeds from");
     let file = FileDialog::new()
         .add_filter("Spin Rhythm Track Bundle", &["srtb"])
@@ -71,7 +71,7 @@ fn extract_speeds() -> Result<(), String> {
         .large_string_values_container
         .values
         .iter()
-        .find(|v| v.key == "SpeedHelper_SpeedTriggers")
+        .find(|v| v.key == key)
     {
         println!("Found speeds data. Converting");
         let speeds: SpeedTriggersData =
@@ -94,7 +94,7 @@ fn extract_speeds() -> Result<(), String> {
     Ok(())
 }
 
-fn remove_speeds() -> Result<(), String> {
+fn remove_speeds(key: &str) -> Result<(), String> {
     println!("Select a chart to remove speeds from");
     let file = FileDialog::new()
         .add_filter("Spin Rhythm Track Bundle", &["srtb"])
@@ -110,7 +110,7 @@ fn remove_speeds() -> Result<(), String> {
         .values
         .iter()
         .enumerate()
-        .find(|(_, v)| v.key == "SpeedHelper_SpeedTriggers")
+        .find(|(_, v)| v.key == key)
     {
         println!("Found speeds data. Removing");
         chart.large_string_values_container.values.remove(index);
@@ -130,6 +130,18 @@ fn remove_speeds() -> Result<(), String> {
     Ok(())
 }
 
+fn map_num_to_key<'a>(opt: i32) -> Option<&'a str> {
+    match opt {
+        1 => Some("SpeedHelper_SpeedTriggers_EASY"),
+        2 => Some("SpeedHelper_SpeedTriggers_NORMAL"),
+        3 => Some("SpeedHelper_SpeedTriggers_HARD"),
+        4 => Some("SpeedHelper_SpeedTriggers_EXPERT"),
+        5 => Some("SpeedHelper_SpeedTriggers_XD"),
+        6 => Some("SpeedHelper_SpeedTriggers"),
+        _ => None
+    }
+}
+
 pub fn program_flow() -> Result<(), String> {
     println!("Please select a mode");
     println!("1. Integrate speeds into srtb");
@@ -142,12 +154,29 @@ pub fn program_flow() -> Result<(), String> {
     std::io::stdin()
         .read_line(&mut buf)
         .expect("failed to read from stdin");
-    let opt: i32 = buf.trim_end().parse().expect("not a number");
+    let mode_opt: i32 = buf.trim_end().parse().expect("not a number");
 
-    match opt {
-        1 => integrate_speeds(),
-        2 => extract_speeds(),
-        3 => remove_speeds(),
+    println!("Please select the target difficulty");
+    println!("1. Easy");
+    println!("2. Normal");
+    println!("3. Hard");
+    println!("4. Expert");
+    println!("5. XD");
+    println!("6. All (legacy)");
+    print!("> ");
+    let mut buf = String::new();
+    std::io::stdout().flush().expect("failed to flush stdout");
+    std::io::stdin()
+        .read_line(&mut buf)
+        .expect("failed to read from stdin");
+    let diff_opt: i32 = buf.trim_end().parse().expect("not a number");
+
+    let lookup_key = map_num_to_key(diff_opt).expect("invalid difficulty");
+
+    match mode_opt {
+        1 => integrate_speeds(lookup_key),
+        2 => extract_speeds(lookup_key),
+        3 => remove_speeds(lookup_key),
         4 => Ok(()),
         _ => Err("invalid mode".into()),
     }

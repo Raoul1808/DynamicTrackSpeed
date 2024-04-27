@@ -6,9 +6,9 @@ Scroll Velocities in SRXD. Finally!
 
 The mod is made to be as simple to use as possible. You will need:
 - A text editor
-- The chart (an the chart's file name)
+- The chart (and the chart's file name)
 
-To get started adding speed triggers, open your customs directory and create a new file with the same name as the SRTB file you want to add speed triggers do, but end it with the `.speeds` extension.
+To get started adding speed triggers, open your customs directory and create a new file with the same name as the SRTB file you want to add speed triggers to, but end it with the `.speeds` extension.
 
 For example if you want to add triggers to `NULCTRL.srtb`, create a new file called `NULCTRL.speeds` **right next to `NULCTRL.srtb`**. They must be in the same directory.
 
@@ -39,7 +39,7 @@ Speed triggers in the `speeds` format use this format:
 # In case you don't, the game automatically interprets this to be false (default value of a boolean)
 ```
 
-Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.
+Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back, or click the Change Difficulty button if you are already in the editor. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.
 
 > [!IMPORTANT]
 > 

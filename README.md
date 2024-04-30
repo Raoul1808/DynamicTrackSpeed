@@ -55,7 +55,7 @@ Once the file is saved, go back to the chart listing and go to your chart. If yo
 
 ## Integration tool
 
-Due to SpinShare uploading limitations, you can integrate the speed triggers directly in your SRTB by using a convenient little tool you can find with the mod download.
+Due to SpinShare uploading limitations, you can integrate the speed triggers directly in your SRTB by using a convenient little tool you can find on its [separate repository](https://github.com/Raoul1808/srtb-integration-program).
 
 The tool is rather self-explanatory. You can integrate your speeds file in your chart or extract an existing chart's speeds file in case you want to analyze the speed triggers.
 
@@ -76,18 +76,6 @@ Steps:
 
 **This mod depends on Newtonsoft.Json, make sure to include it in your plugins folder!!**
 
-## Building the integration tool
-
-Prerequisites:
-- A rust toolchain (preferably installed with rustup)
-
-Steps:
-1. Clone this repo
-2. cd into `srtb-integrate-speeds`
-3. Run `cargo build` or `cargo run` from a command line
-   - If you want to use the gui version, add the flag `--features gui`
-4. Profit
-
 ## License
 
-This mod and the integration tool are licensed under the [MIT License](LICENSE).
+This mod is licensed under the [MIT License](LICENSE).

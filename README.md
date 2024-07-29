@@ -37,6 +37,29 @@ Speed triggers in the `speeds` format use this format:
 
 # You don't have to specify whether to interpolate or not.
 # In case you don't, the game automatically interprets this to be false (default value of a boolean)
+
+# v1.4.0 addition: Repeat blocks
+# Repeat blocks will repeat whatever is inside the defined block X times
+# and add Y to the trigger time for each iteration.
+# You cannot put repeat blocks inside other repeat blocks.
+# Syntax:
+Repeat X interval Y
+<triggers>
+EndRepeat
+
+# Example:
+Repeat 3 interval 1.0
+30 0.5 true
+30.5 1 false
+EndRepeat
+
+# This will be interpreted as:
+# 30 0.5 true
+# 30.5 1 false
+# 31 0.5 true
+# 31.5 1 false
+# 32 0.5 true
+# 32.5 1 false
 ```
 
 Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back, or click the Change Difficulty button if you are already in the editor. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.

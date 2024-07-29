@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -29,6 +30,7 @@ namespace DynamicTrackSpeed
         }
 
         public static void Log(object msg) => _logger.LogMessage(msg);
+        public static void LogError(object msg) => _logger.LogError(msg);
 
         internal class QuickPatches
         {
@@ -69,20 +71,60 @@ namespace DynamicTrackSpeed
             private static List<SpeedTrigger> TriggersFromSpeedsFile(string speedsPath)
             {
                 var speeds = new List<SpeedTrigger>();
-                foreach (string line in File.ReadAllLines(speedsPath))
+
+                bool repeating = false;
+                int repeatCount = 0;
+                int currentRepeatIteration = 0;
+                float repeatInterval = 0f;
+                int repeatLineBeginning = 0;
+                
+                var lines = File.ReadAllLines(speedsPath);
+                for (int lineNumber = 0; lineNumber < lines.Length; lineNumber++)
                 {
+                    string line = lines[lineNumber];
                     if (line.StartsWith("#"))
                         continue;
-                    var elems = line.Split(' '); 
-                    var trigger = new SpeedTrigger();
-                    if (elems.Length < 2) continue;
-                    if (float.TryParse(elems[0], NumberStyles.Float, _culture, out float time) && float.TryParse(elems[1], NumberStyles.Float, _culture, out float speed))
+                    var elems = line.ToLower().Trim().Split(null);
+                    
+                    if (elems[0] == "repeat")
                     {
-                        trigger.Time = time;
-                        trigger.SpeedMultiplier = speed;
+                        if (elems.Length < 4)
+                            throw new Exception($"Line {lineNumber}: missing arguments for Repeat instruction: {elems.Length}/4 supplied");
+                        if (repeating)
+                            throw new Exception($"Line {lineNumber}: cannot start repeat block inside another repeat block");
+                        repeating = true;
+                        repeatCount = int.Parse(elems[1]);
+                        repeatInterval = float.Parse(elems[3], _culture);
+                        currentRepeatIteration = 0;
+                        repeatLineBeginning = lineNumber;
+                        continue;
                     }
-                    else continue;
 
+                    if (elems[0] == "endrepeat")
+                    {
+                        if (!repeating)
+                            throw new Exception($"Line {lineNumber}: unexpected EndRepeat block");
+                        if (++currentRepeatIteration < repeatCount)
+                        {
+                            lineNumber = repeatLineBeginning;
+                            continue;
+                        }
+                        repeating = false;
+                        repeatCount = 0;
+                        repeatInterval = 0f;
+                        currentRepeatIteration = 0;
+                    }
+                    if (elems.Length < 2) continue;
+                    if (!float.TryParse(elems[0], NumberStyles.Float, _culture, out float time))
+                        throw new Exception($"Line {lineNumber}: invalid time");
+                    if (!float.TryParse(elems[1], NumberStyles.Float, _culture, out float speed))
+                        throw new Exception($"Line {lineNumber}: invalid speed multiplier");
+
+                    var trigger = new SpeedTrigger
+                    {
+                        Time = repeating ? time + repeatInterval * currentRepeatIteration : time,
+                        SpeedMultiplier = speed,
+                    };
                     if (elems.Length >= 3 && bool.TryParse(elems[2], out bool interpolate))
                     {
                         trigger.InterpolateToNextTrigger = interpolate;
@@ -118,16 +160,26 @@ namespace DynamicTrackSpeed
                 
                 // Loading order: diff-speeds > speeds > diff-srtb > srtb
                 // diff-speeds
-                if (File.Exists(diffSpeedsPath))
-                    triggers = TriggersFromSpeedsFile(diffSpeedsPath);
-                // global speeds
-                else if (File.Exists(speedsPath))
-                    triggers = TriggersFromSpeedsFile(speedsPath);
-                // diff-srtb and srtb
-                else
+                try
                 {
-                    triggers = TriggersFromSrtb(trackData, diffStr);
-                    loadedFromSpeeds = false;
+                    if (File.Exists(diffSpeedsPath))
+                        triggers = TriggersFromSpeedsFile(diffSpeedsPath);
+                    // global speeds
+                    else if (File.Exists(speedsPath))
+                        triggers = TriggersFromSpeedsFile(speedsPath);
+                    // diff-srtb and srtb
+                    else
+                    {
+                        triggers = TriggersFromSrtb(trackData, diffStr);
+                        loadedFromSpeeds = false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    NotificationSystemGUI.AddMessage("An error occurred while loading speed triggers; check console for details");
+                    LogError("Error while loading speed triggers");
+                    LogError(e);
+                    return;
                 }
 
                 if (triggers == null || triggers.Count <= 0) return;

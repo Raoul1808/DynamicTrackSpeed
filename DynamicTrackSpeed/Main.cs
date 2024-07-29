@@ -14,7 +14,7 @@ namespace DynamicTrackSpeed
     {
         public const string Guid = "srxd.raoul1808.dynamictrackspeed";
         public const string Name = "Dynamic Track Speed";
-        public const string Version = "1.3.0";
+        public const string Version = "1.4.0";
 
         private static ManualLogSource _logger;
         private static CultureInfo _culture;

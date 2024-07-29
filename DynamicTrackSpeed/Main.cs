@@ -6,10 +6,14 @@ using System.Linq;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using SpinCore.Translation;
+using SpinCore.UI;
+using SpinCore.Utility;
 
 namespace DynamicTrackSpeed
 {
     [BepInPlugin(Guid, Name, Version)]
+    [BepInDependency("srxd.raoul1808.spincore", BepInDependency.DependencyFlags.HardDependency)]
     public class Main : BaseUnityPlugin
     {
         public const string Guid = "srxd.raoul1808.dynamictrackspeed";
@@ -18,6 +22,7 @@ namespace DynamicTrackSpeed
 
         private static ManualLogSource _logger;
         private static CultureInfo _culture;
+        private static bool _enabled;
 
         private void Awake()
         {
@@ -27,6 +32,33 @@ namespace DynamicTrackSpeed
             Harmony harmony = new Harmony(Guid);
             harmony.PatchAll(typeof(QuickPatches));
             Logger.LogMessage("Patched methods: " + harmony.GetPatchedMethods().Count());
+
+            TranslationHelper.AddTranslation("DTS_SectionHeader", "Dynamic Track Speed");
+            TranslationHelper.AddTranslation("DTS_Enable", "Enable");
+            TranslationHelper.AddTranslation("DTS_EnableNotice", "  Effective only when starting track");
+
+            UIHelper.RegisterGroupInQuickModSettings(panelTransform =>
+            {
+                var section = UIHelper.CreateGroup(panelTransform, "DTS Section");
+                UIHelper.CreateSectionHeader(
+                    section.Transform,
+                    "Header",
+                    "DTS_SectionHeader",
+                    false
+                );
+                UIHelper.CreateSmallToggle(
+                    section.Transform,
+                    "EnableDTS",
+                    "DTS_Enable",
+                    true,
+                    v => _enabled = v
+                );
+                UIHelper.CreateLabel(
+                    section.Transform,
+                    "EnableNotice",
+                    "DTS_EnableNotice"
+                );
+            });
         }
 
         public static void Log(object msg) => _logger.LogMessage(msg);
@@ -139,6 +171,7 @@ namespace DynamicTrackSpeed
             [HarmonyPatch(typeof(SplineTrackData.DataToGenerate), MethodType.Constructor, typeof(PlayableTrackData)), HarmonyPostfix]
             public static void AddTrackSpeedsToSpline(SplineTrackData.DataToGenerate __instance, PlayableTrackData trackData)
             {
+                if (!_enabled) return;
                 if (trackData.TrackDataList.Count != 1)
                     return;
                 var data = trackData.TrackDataList[0];

@@ -37,6 +37,7 @@ namespace DynamicTrackSpeed
             TranslationHelper.AddTranslation("DTS_Enable", "Enable");
             TranslationHelper.AddTranslation("DTS_EnableNotice", "  Effective only when starting track");
 
+            _enabled = true;
             UIHelper.RegisterGroupInQuickModSettings(panelTransform =>
             {
                 var section = UIHelper.CreateGroup(panelTransform, "DTS Section");

@@ -105,11 +105,11 @@ namespace DynamicTrackSpeed
             {
                 var speeds = new List<SpeedTrigger>();
 
-                bool repeating = false;
-                int repeatCount = 0;
-                int currentRepeatIteration = 0;
-                float repeatInterval = 0f;
-                int repeatLineBeginning = 0;
+                int repeatDepth = 0;
+                var repeatCounts = new List<int>();
+                var currentRepeatIterations = new List<int>();
+                var repeatIntervals = new List<float>();
+                var repeatLineBeginnings = new List<int>();
                 
                 var lines = File.ReadAllLines(speedsPath);
                 for (int lineNumber = 0; lineNumber < lines.Length; lineNumber++)
@@ -123,29 +123,29 @@ namespace DynamicTrackSpeed
                     {
                         if (elems.Length < 4)
                             throw new Exception($"Line {lineNumber}: missing arguments for Repeat instruction: {elems.Length}/4 supplied");
-                        if (repeating)
-                            throw new Exception($"Line {lineNumber}: cannot start repeat block inside another repeat block");
-                        repeating = true;
-                        repeatCount = int.Parse(elems[1]);
-                        repeatInterval = float.Parse(elems[3], _culture);
-                        currentRepeatIteration = 0;
-                        repeatLineBeginning = lineNumber;
+                        repeatDepth++;
+                        repeatCounts.Add(int.Parse(elems[1]));
+                        repeatIntervals.Add(float.Parse(elems[3], _culture));
+                        currentRepeatIterations.Add(0);
+                        repeatLineBeginnings.Add(lineNumber);
                         continue;
                     }
 
                     if (elems[0] == "endrepeat")
                     {
-                        if (!repeating)
+                        if (repeatDepth <= 0)
                             throw new Exception($"Line {lineNumber}: unexpected EndRepeat block");
-                        if (++currentRepeatIteration < repeatCount)
+                        if (++currentRepeatIterations[repeatDepth - 1] < repeatCounts[repeatDepth - 1])
                         {
-                            lineNumber = repeatLineBeginning;
+                            lineNumber = repeatLineBeginnings[repeatDepth - 1];
                             continue;
                         }
-                        repeating = false;
-                        repeatCount = 0;
-                        repeatInterval = 0f;
-                        currentRepeatIteration = 0;
+
+                        repeatDepth--;
+                        repeatCounts.RemoveAt(repeatDepth);
+                        repeatIntervals.RemoveAt(repeatDepth);
+                        currentRepeatIterations.RemoveAt(repeatDepth);
+                        repeatLineBeginnings.RemoveAt(repeatDepth);
                     }
                     if (elems.Length < 2) continue;
                     if (!float.TryParse(elems[0], NumberStyles.Float, _culture, out float time))
@@ -153,9 +153,14 @@ namespace DynamicTrackSpeed
                     if (!float.TryParse(elems[1], NumberStyles.Float, _culture, out float speed))
                         throw new Exception($"Line {lineNumber}: invalid speed multiplier");
 
+                    if (repeatDepth > 0)
+                    {
+                        for (int i = 0; i < repeatDepth; i++)
+                            time += repeatIntervals[i] * currentRepeatIterations[i];
+                    }
                     var trigger = new SpeedTrigger
                     {
-                        Time = repeating ? time + repeatInterval * currentRepeatIteration : time,
+                        Time = time,
                         SpeedMultiplier = speed,
                     };
                     if (elems.Length >= 3 && bool.TryParse(elems[2], out bool interpolate))

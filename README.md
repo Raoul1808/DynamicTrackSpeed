@@ -60,6 +60,31 @@ EndRepeat
 # 31.5 1 false
 # 32 0.5 true
 # 32.5 1 false
+
+# v1.5.0 addition: Nested Repeat blocks
+# You can place repeat blocks inside other repeat blocks to repeat repeated sections.
+# There is no limit to how many repeat blocks you can nest, so long as you remember to close every loop.
+# Example:
+Repeat 3 interval 2.0
+Repeat 2 interval 0.5
+1.0 0.5 true
+1.25 1.0 false
+EndRepeat
+EndRepeat
+
+# This will be interpreted as:
+# 1.0 0.5 true
+# 1.25 1.0 false
+# 1.5 0.5 true
+# 1.75 1.0 false
+# 3.0 0.5 true
+# 3.25 1.0 false
+# 3.5 0.5 true
+# 3.75 1.0 false
+# 5.0 0.5 true
+# 5.25 1.0 false
+# 5.5 0.5 true
+# 5.75 1.0 false
 ```
 
 Once the file is saved, go back to the chart listing and go to your chart. If you are already on your chart, go to another and come back, or click the Change Difficulty button if you are already in the editor. Every time you reload the chart preview, the mod will reload speeds, making quick editing convenient.
